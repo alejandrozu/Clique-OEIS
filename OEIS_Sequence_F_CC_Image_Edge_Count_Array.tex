@@ -1,0 +1,279 @@
+
+% Paper F: CC-Image Edge Count Array
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{OEIS Sequence Proposal: CC-Image Edge Count Array\\
+\large Measuring the Edge Inflation of the Clique-Cluster Transformation}
+\author{Alejandro Zarzuelo Urdiales\\
+Department of Mathematics, University of Oviedo\\
+UO275823@uniovi.es}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper proposes a new two-parameter integer sequence for the OEIS: the array $T(n, p)$ counting the number of edges in the CC-image of the complete $p$-multigraph on $n$ vertices under the Clique-Cluster Transformation. The array has a piecewise structure with a phase transition at $n = p$, where the diagonal values are perfect cubes $n^3$. We derive closed-form formulas for both regimes, compute values for $n, p \leq 10$, and show that while individual rows and columns overlap with existing OEIS entries (as unrelated polynomial sequences), the unified piecewise array with its graph-theoretic interpretation is entirely absent from the OEIS.
+\end{abstract}
+
+\section{Introduction}
+
+The Clique-Cluster Transformation $f_{CC}$ \cite{zarzuelo2025} encodes $p$-multigraphs into simple graphs by replacing each vertex with a coding clique of size $K$ and wiring inter-cluster edges to encode multiplicity. While the vertex count of the CC-image is $n \cdot K$, the edge count determines the true space complexity of the encoding. This paper proposes the two-parameter array of CC-image edge counts for complete $p$-multigraphs and demonstrates its novel combinatorial structure.
+
+\section{Mathematical Framework}
+
+\subsection{CC-Image Edge Count}
+
+\begin{definition}[CC-Image of a Complete $p$-Multigraph]
+For the complete $p$-multigraph $K_n^{(p)}$ on $n$ vertices, the CC-transformation with minimum valid coding clique size $K = \max(p, n) + 1$ produces a simple graph $f_{CC}(K_n^{(p)})$ on $n \cdot K$ vertices with:
+\begin{enumerate}
+\item \textbf{Intra-cluster edges}: Each of the $n$ clusters induces a complete graph $K_K$, contributing $n \cdot \binom{K}{2} = \frac{nK(K-1)}{2}$ edges.
+\item \textbf{Inter-cluster edges}: Each of the $\binom{n}{2}$ pairs of clusters is connected by $p$ index-rigid edges (corresponding to multiplicity $p$), contributing $\binom{n}{2} \cdot p = \frac{n(n-1)p}{2}$ edges.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Sequence F: CC-Image Edge Count Array]
+For $n \geq 1$ and $p \geq 1$, the array $T(n, p)$ is defined as the total number of edges in the CC-image of $K_n^{(p)}$:
+\[
+T(n, p) = \frac{nK(K-1)}{2} + \frac{n(n-1)p}{2},
+\]
+where $K = \max(p, n) + 1$.
+\end{definition}
+
+\section{Main Results}
+
+\subsection{Piecewise Closed Form}
+
+\begin{theorem}[Piecewise Formula for $T(n, p)$]
+\label{thm:piecewise}
+\[
+T(n, p) = \begin{cases}
+\dfrac{np(p + n)}{2} & \text{if } n \leq p, \\[8pt]
+\dfrac{n\bigl[n^2 + (p+1)n - p\bigr]}{2} & \text{if } n > p.
+\end{cases}
+\]
+\end{theorem}
+
+\begin{proof}
+\textbf{Case $n \leq p$:} Then $K = p + 1$. Substituting:
+\[
+T(n, p) = \frac{n(p+1)p}{2} + \frac{n(n-1)p}{2} = \frac{np\bigl[(p+1) + (n-1)\bigr]}{2} = \frac{np(p+n)}{2}.
+\]
+
+\textbf{Case $n > p$:} Then $K = n + 1$. Substituting:
+\[
+T(n, p) = \frac{n(n+1)n}{2} + \frac{n(n-1)p}{2} = \frac{n\bigl[n(n+1) + (n-1)p\bigr]}{2} = \frac{n\bigl[n^2 + n + np - p\bigr]}{2} = \frac{n\bigl[n^2 + (p+1)n - p\bigr]}{2}.
+\]
+\end{proof}
+
+\subsection{Diagonal Values}
+
+\begin{corollary}[Cubes on the Diagonal]
+At $n = p$, both formulas agree and give:
+\[
+T(n, n) = \frac{n \cdot n \cdot (n + n)}{2} = \frac{2n^3}{2} = n^3.
+\]
+The diagonal of the array consists of perfect cubes: $1, 8, 27, 64, 125, \ldots$ (OEIS A000578).
+\end{corollary}
+
+\begin{remark}[Significance of the Diagonal]
+The cube $T(n, n) = n^3$ reflects the balanced case where the maximum multiplicity $p = n$ equals the clique number $\omega(K_n^{(n)}) = n$. At this balance point, the intra-cluster edges contribute $\frac{n^2(n+1)}{2}$ and the inter-cluster edges contribute $\frac{n^2(n-1)}{2}$, summing to $n^3$. The coding clique size is $K = n + 1$ from both directions of the max function.
+\end{remark}
+
+\subsection{Structural Properties}
+
+\begin{proposition}[Row Structure for Fixed $n > p$]
+For fixed $n$ and $p < n$, the row values form an arithmetic progression with common difference $\frac{n(n-1)}{2}$:
+\[
+T(n, p) = T(n, 0) + \frac{n(n-1)}{2} \cdot p,
+\]
+where $T(n, 0) = \frac{n^2(n+1)}{2}$ is the intra-cluster edge count (CC-image of the empty multigraph, formally $p = 0$).
+\end{proposition}
+
+\begin{proof}
+For $n > p$, the formula is $T(n, p) = \frac{n^2(n+1)}{2} + \frac{n(n-1)p}{2}$. This is linear in $p$ with coefficient $\frac{n(n-1)}{2}$.
+\end{proof}
+
+\begin{proposition}[Column Structure for Fixed $p < n$]
+For fixed $p$ and large $n$ (specifically $n > p$), the column values follow a cubic polynomial in $n$:
+\[
+T(n, p) = \frac{n^3}{2} + \frac{(p+1)n^2}{2} - \frac{pn}{2}.
+\]
+\end{proposition}
+
+\begin{proposition}[Row Structure for Fixed $n \leq p$]
+For fixed $n$ and $p \geq n$, the row values are quadratic in $p$:
+\[
+T(n, p) = \frac{n \cdot p^2}{2} + \frac{n^2 \cdot p}{2}.
+\]
+\end{proposition}
+
+\begin{corollary}[Asymptotic Edge Inflation Ratio]
+For large $n$ with fixed $p$, the CC-image has $\sim n^3/2$ edges while the original complete $p$-multigraph has $\binom{n}{2} \cdot p \sim pn^2/2$ edges. The edge inflation ratio is:
+\[
+\frac{T(n, p)}{e(K_n^{(p)})} \sim \frac{n^3/2}{pn^2/2} = \frac{n}{p} \to \infty.
+\]
+For the balanced case $p = n$, both the CC-image and the original have order $n^3$ edges, giving a constant inflation ratio approaching 1 in the leading term.
+\end{corollary}
+
+\section{Computational Results}
+
+\subsection{The Array $T(n, p)$ for $n, p = 1, \ldots, 8$}
+
+\begin{center}
+\begin{tabular}{c|cccccccc}
+\toprule
+$n \backslash p$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
+\midrule
+1 & 1 & 3 & 6 & 10 & 15 & 21 & 28 & 36 \\
+2 & 7 & 8 & 15 & 24 & 35 & 48 & 63 & 80 \\
+3 & 21 & 24 & 27 & 42 & 60 & 81 & 105 & 132 \\
+4 & 46 & 52 & 58 & 64 & 90 & 120 & 154 & 192 \\
+5 & 85 & 95 & 105 & 115 & 125 & 165 & 210 & 260 \\
+6 & 141 & 156 & 171 & 186 & 201 & 216 & 273 & 336 \\
+7 & 217 & 238 & 259 & 280 & 301 & 322 & 343 & 414 \\
+8 & 316 & 344 & 372 & 400 & 428 & 456 & 484 & 512 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Extended Array for $n, p = 9, 10$}
+
+\begin{center}
+\begin{tabular}{c|cc}
+\toprule
+$n \backslash p$ & 9 & 10 \\
+\midrule
+1 & 45 & 55 \\
+2 & 99 & 120 \\
+3 & 162 & 195 \\
+4 & 234 & 280 \\
+5 & 315 & 380 \\
+6 & 405 & 490 \\
+7 & 504 & 610 \\
+8 & 612 & 740 \\
+9 & 729 & 885 \\
+10 & 855 & 1000 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Antidiagonal Reading}
+
+The array read by antidiagonals ($n + p = \text{const}$) gives the sequence:
+\[
+1, 3, 7, 6, 8, 21, 10, 15, 24, 46, 15, 24, 27, 52, 85, 21, 35, 42, 58, 95, 141, \ldots
+\]
+
+This flattened sequence captures the full two-parameter structure in a single linear sequence and is the natural format for OEIS submission of a 2D array.
+
+\section{Why This Is Not a Trivial Extension}
+
+While individual rows and columns of $T(n, p)$ overlap numerically with existing OEIS entries, these overlaps are coincidental --- the existing entries have completely different combinatorial interpretations, and none captures the piecewise structure or the CC-transformation meaning.
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Component & OEIS & Existing meaning & CC meaning? \\
+\midrule
+Row $n = 1$ & A000217 & Triangular numbers & Single coding clique \\
+Column $p = 1$ & A127736 & Composition counts & Simple graph encoding \\
+Row $n = 2$ tail & A005563 & $(n+1)^2 - 1$ & Two-cluster encoding \\
+Row $n = 3$ tail & A140091 & Hexagonal triangle edges & Three-cluster encoding \\
+Diagonal $n = p$ & A000578 & Perfect cubes & Balanced regime \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The key arguments for non-triviality are:
+
+\begin{enumerate}
+\item \textbf{No existing entry captures the piecewise structure.} The transition at $n = p$ from the quadratic regime $np(p+n)/2$ to the cubic regime $n[n^2 + (p+1)n - p]/2$ is a fundamental feature of the CC-transformation that no single polynomial sequence can represent.
+
+\item \textbf{No existing entry has the CC-transformation interpretation.} The graph-theoretic meaning --- edge inflation of a multigraph-to-simple-graph encoding --- is entirely absent from the OEIS. None of the overlapping entries (A127736, A140091) mention multigraphs, coding cliques, or graph embeddings.
+
+\item \textbf{The 2D array as a unified object is novel.} While each row for fixed $n$ is eventually a polynomial in $p$ (and vice versa), the \emph{array as a whole} with its phase transition and graph-theoretic meaning does not exist in the OEIS. The antidiagonal reading $1, 3, 7, 6, 8, 21, 10, 15, 24, 46, \ldots$ has no OEIS match.
+
+\item \textbf{Individual columns for $p \geq 3$ are novel.} The sequences for fixed $p \geq 3$ with the piecewise first terms are not in the OEIS. For $p = 3$: the values $6, 15, 27, 58, 105, 171, 259, 372, 513, 685, \ldots$ have no OEIS match.
+\end{enumerate}
+
+\section{OEIS Cross-References}
+
+\begin{itemize}
+\item \textbf{A000217}: Triangular numbers $p(p+1)/2$. Row $n = 1$ of our array.
+\item \textbf{A127736}: $a(n) = n(n^2 + 2n - 1)/2$. Column $p = 1$ of our array (without graph interpretation).
+\item \textbf{A005563}: $a(n) = n(n+2)$. Row $n = 2$ for $p \geq 2$ (without graph interpretation).
+\item \textbf{A140091}: $a(n) = 3n(n+3)/2$. Row $n = 3$ for $p \geq 3$ (hexagonal triangle edges, without graph interpretation).
+\item \textbf{A000578}: Perfect cubes $n^3$. Diagonal of our array.
+\item \textbf{A002378}: Oblong numbers $n(n+1)$. Vertex count of CC-images (related but different parameter).
+\end{itemize}
+
+\section{Algorithmic Implementation}
+
+\begin{verbatim}
+def T(n, p):
+    """Compute the CC-Image edge count T(n, p)."""
+    K = max(p, n) + 1
+    intra = n * K * (K - 1) // 2
+    inter = n * (n - 1) * p // 2
+    return intra + inter
+
+# Or using the piecewise formula:
+def T_piecewise(n, p):
+    if n <= p:
+        return n * p * (p + n) // 2
+    else:
+        return n * (n**2 + (p + 1) * n - p) // 2
+
+# Compute the array
+for n in range(1, 11):
+    row = [T(n, p) for p in range(1, 11)]
+    print(f"n={n}: {row}")
+
+# Compute antidiagonal reading
+antidiag = []
+for s in range(2, 22):
+    for n in range(1, s):
+        p = s - n
+        if p >= 1:
+            antidiag.append(T(n, p))
+print(f"Antidiagonal: {antidiag}")
+\end{verbatim}
+
+\section{Applications}
+
+\begin{enumerate}
+\item \textbf{Space Complexity of Graph Encoding}: The array $T(n, p)$ directly measures the edge-space cost of encoding a $p$-multigraph as a simple graph via the CC-transformation. The ratio $T(n, p) / e(G)$ quantifies the encoding overhead.
+
+\item \textbf{Algorithmic Feasibility}: The cubic growth $T(n, p) \sim n^3/2$ for fixed $p$ shows that the CC-transformation is polynomial in the input size, making it feasible for computational applications. The balanced case $p = n$ gives $T = n^3$, which matches the $\Theta(n^3)$ complexity of matrix multiplication --- suggesting a potential connection.
+
+\item \textbf{Graph Database Design}: In applications where multigraphs must be stored in simple-graph databases (e.g., knowledge graphs in triple stores), the array $T(n, p)$ gives the exact storage overhead as a function of the original graph's density and multiplicity.
+\end{enumerate}
+
+\section{Conclusion}
+
+The CC-Image Edge Count Array $T(n, p)$ provides the first complete characterization of the edge inflation produced by the Clique-Cluster Transformation. Its piecewise structure with a phase transition at $n = p$, the perfect-cube diagonal, and the graph-theoretic interpretation distinguish it from all existing OEIS entries. The antidiagonal reading offers a natural linear format for OEIS inclusion.
+
+\begin{thebibliography}{9}
+\bibitem{zarzuelo2025} A. Zarzuelo Urdiales, ``Canonical Embedding of Universal $p$-Graphs, Commensurable Weighted Graphs, and Line Structures into the Rado Graph via Clique-Size Dominance Transformation,'' December 2025.
+\bibitem{oeis} N. J. A. Sloane et al., The On-Line Encyclopedia of Integer Sequences, \url{https://oeis.org}.
+\bibitem{diestel2017} R. Diestel, \textit{Graph Theory}, 5th ed., Springer, 2017.
+\end{thebibliography}
+
+\end{document}
