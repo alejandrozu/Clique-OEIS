@@ -1,0 +1,40 @@
+name: Lean formalization
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned Lean and mathlib project
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: true
+          build-args: '--wfail'
+          use-mathlib-cache: true
+      - name: Reject admissions and additional axiom declarations
+        run: |
+          if grep -nE '^[[:space:]]*axiom[[:space:]]|\b(sorry|admit)\b' DominanceThreshold.lean CCImageSequences.lean CCRecovery.lean CCUnusedRecovery.lean; then
+            exit 1
+          fi
+      - name: Print and check the proved results' axiom dependencies
+        run: |
+          mkdir -p work
+          lake env lean verification/ProofAudit.lean > work/proof_axioms.log
+          cat work/proof_axioms.log
+          python3 scripts/check_proof_axioms.py work/proof_axioms.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lean-proof-axioms
+          path: work/proof_axioms.log
+          if-no-files-found: error

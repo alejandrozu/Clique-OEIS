@@ -1,0 +1,9 @@
+{
+  "all_six_sequences_matched_through_n": 8,
+  "eight_vertex_graphs_in_each_independent_census": 268435456,
+  "independent_eight_vertex_histograms_identical": true,
+  "exact_stored_rows_passing_structural_checks": 56,
+  "cumulative_stored_rows_matched": 9,
+  "larger_interior_terms_exhaustively_recomputed": false,
+  "extra_census_checked": false
+}

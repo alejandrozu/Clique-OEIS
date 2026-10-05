@@ -1,0 +1,41 @@
+{
+  "construction": "Coding clique of size K; q same-index intercluster edges for multiplicity q",
+  "decoder": "Distinct closed neighborhoods of minimum-degree vertices; cross-cluster edge counts recover multiplicities",
+  "proof": "For K=p+1, last index has no external neighbors. Minimum degree is K-1. Every vertex of degree K-1 has closed neighborhood equal to its coding clique. Every coding clique supplies such a vertex. Thus decoder recovers all clusters, irrespective of clique number.",
+  "all_simple_graphs_n1_through6_checked": 33867,
+  "all_5_multigraphs_n4_checked": 46656,
+  "triangle_K2_maximal_cliques_zero_based": [
+    [
+      0,
+      1
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      0,
+      2,
+      4
+    ],
+    [
+      4,
+      5
+    ]
+  ],
+  "triangle_K2_clusters_recovered": [
+    [
+      4,
+      5
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "conclusion": "K>omega is sufficient for coding cliques to be the largest cliques; it is not necessary for lossless decoding. For simple graphs K=2 suffices for this construction regardless of omega."
+}

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-05",
+  "compiler": "Tectonic 0.17.0+20260731 (existing bundled compiler)",
+  "command": "tectonic --only-cached --untrusted --keep-logs --outdir work/pdf-build OEIS_Sequence_D_Dominance_Threshold_Corrected.tex",
+  "exit_code": 0,
+  "source": "OEIS_Sequence_D_Dominance_Threshold_Corrected.tex",
+  "source_sha256": "8e7487326733f39558ed41505722d345963512cd3c5827cfa9c129325b12febf",
+  "pdf": "Dominance.pdf",
+  "pdf_sha256": "3db8637cedfcc2bb5fe1a29f0b93b68e4edc7e573e5978758e270d85451554cc",
+  "pages": 9,
+  "pdf_metadata": {
+    "title": "Clique-Size Dominance Threshold Distribution",
+    "author": "Alejandro Zarzuelo Urdiales"
+  },
+  "visual_review": "All nine pages inspected; tables, formulas, figure and corrigendum checked. Final metadata-only change did not alter page layout.",
+  "tex_layout_diagnostics": "No overfull boxes, missing glyphs or undefined references in the final TeX log.",
+  "numerical_tables": "All 100 retained table entries independently compared with the attributed OEIS snapshots."
+}

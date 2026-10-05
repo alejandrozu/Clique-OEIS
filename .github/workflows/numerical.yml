@@ -1,0 +1,45 @@
+name: Numerical verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check evidence integrity
+        run: python scripts/refresh_manifest.py --check
+      - name: Test original clique oracle and reference comparison
+        run: python -m unittest discover -s verification/tests -v
+      - name: Cross-check independent algorithms through six vertices
+        run: node verification/test_census.js
+      - name: Recompute all eight-vertex labeled graphs
+        run: node verification/census.js --n 8 --algorithm induced --out work/census_n8.json
+      - name: Compare all six sequences with actual OEIS snapshots
+        run: python verification/verify.py --census work/census_n8.json --out work/verification_summary.json
+      - name: Preserve the revised paper's enumeration tables
+        run: python verification/check_paper_tables.py
+      - name: Check unused-index decoder
+        run: python verification/check_decoder.py --out work/decoder_checks.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: numerical-verification
+          path: |
+            work/census_n8.json
+            work/verification_summary.json
+            work/decoder_checks.json
+          if-no-files-found: error

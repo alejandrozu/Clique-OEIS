@@ -1,0 +1,21 @@
+{
+  "client_date": "2026-10-05",
+  "platform": "Windows x86_64",
+  "lean_version": "Lean (version 4.19.0, x86_64-w64-windows-gnu, commit 6caaee842e94, Release)",
+  "lake_version": "Lake version 5.0.0-6caaee8 (Lean version 4.19.0)",
+  "mathlib_revision": "c44e0c8ee63ca166450922a373c7409c5d26b00b",
+  "build_command": "lake build --wfail",
+  "build_exit_code": 0,
+  "axiom_audit_command": "lake env lean verification/ProofAudit.lean",
+  "sha256": {
+    "DominanceThreshold.lean": "dbe74a2c725c254d49e53dafb1aeac17c2f2652ab01d2da2d6f05f274adee50e",
+    "CCRecovery.lean": "c538c18b5263195efd413329ef60616954f44dede07f484b8af09ee1718da3b1",
+    "CCUnusedRecovery.lean": "50ad3111b2184de159aa6a87dbfd864369a1de0182db7021f057065bb85d34ea",
+    "CCImageSequences.lean": "e96baef6717ff32cfb80fa10489e5d0eb5ef58540a90f36717fd8d3c87bda4eb",
+    "lean-toolchain": "55e97be96000b5e9e290c9e74482e5e317861499a5540353ce845471bded8cea",
+    "lakefile.lean": "07eb2084affa16a1f92155f89e7d0fc093bda663619e2a68e743fd048e534f20",
+    "lake-manifest.json": "6d0e3b53477e38121ad0aa1cf8ad7e9e7fe659c43626cdc8b609839074a7bc74",
+    "verification/ProofAudit.lean": "48074fe1010085688606f9aa7290cd2824531ecf6767fd96bcd1bf7e421c1d58"
+  },
+  "publication_rebuild": "After LF normalization of the dependency manifest, lake build --wfail passed again with exit code 0."
+}

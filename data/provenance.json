@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-10-05",
+  "sources": [
+    {
+      "sequence": "A395684",
+      "path": "data/oeis_bfiles/A395684.txt",
+      "source_url": "https://oeis.org/A395684/b395684.txt",
+      "sequence_url": "https://oeis.org/A395684",
+      "access_date": "2026-10-05",
+      "terms": 78,
+      "complete_rows": 12,
+      "sha256": "7e38b76575fc6633f7b0aaadd347d03b828e375e87c1fe4ee778d940bbf28dab",
+      "license": "CC-BY-SA-4.0",
+      "attribution": "The On-Line Encyclopedia of Integer Sequences, The OEIS Foundation Inc."
+    },
+    {
+      "sequence": "A395691",
+      "path": "data/oeis_bfiles/A395691.txt",
+      "source_url": "https://oeis.org/A395691/b395691.txt",
+      "sequence_url": "https://oeis.org/A395691",
+      "access_date": "2026-10-05",
+      "terms": 66,
+      "complete_rows": 11,
+      "sha256": "9f8d0d5165dc7ab6ed20346d304614892f2eb32e0c5b97e91d4b05011779ca53",
+      "license": "CC-BY-SA-4.0",
+      "attribution": "The On-Line Encyclopedia of Integer Sequences, The OEIS Foundation Inc."
+    },
+    {
+      "sequence": "A395692",
+      "path": "data/oeis_bfiles/A395692.txt",
+      "source_url": "https://oeis.org/A395692/b395692.txt",
+      "sequence_url": "https://oeis.org/A395692",
+      "access_date": "2026-10-05",
+      "terms": 66,
+      "complete_rows": 11,
+      "sha256": "6d0e9f6a414b0fce174770a97d62739bc8a6b0b4327c1860c3961ff2b272b933",
+      "license": "CC-BY-SA-4.0",
+      "attribution": "The On-Line Encyclopedia of Integer Sequences, The OEIS Foundation Inc."
+    },
+    {
+      "sequence": "A395693",
+      "path": "data/oeis_bfiles/A395693.txt",
+      "source_url": "https://oeis.org/A395693/b395693.txt",
+      "sequence_url": "https://oeis.org/A395693",
+      "access_date": "2026-10-05",
+      "terms": 66,
+      "complete_rows": 11,
+      "sha256": "11fe2486fae99509ace3b8ae6a01bec9679b2a540bbba4fa12b05247f40bc5d1",
+      "license": "CC-BY-SA-4.0",
+      "attribution": "The On-Line Encyclopedia of Integer Sequences, The OEIS Foundation Inc."
+    },
+    {
+      "sequence": "A395694",
+      "path": "data/oeis_bfiles/A395694.txt",
+      "source_url": "https://oeis.org/A395694/b395694.txt",
+      "sequence_url": "https://oeis.org/A395694",
+      "access_date": "2026-10-05",
+      "terms": 66,
+      "complete_rows": 11,
+      "sha256": "2c0149c78c7825f1ba1d64a3d65926c3e7c68a96327264f86b1cd06af937e496",
+      "license": "CC-BY-SA-4.0",
+      "attribution": "The On-Line Encyclopedia of Integer Sequences, The OEIS Foundation Inc."
+    },
+    {
+      "sequence": "A395695",
+      "path": "data/oeis_bfiles/A395695.txt",
+      "source_url": "https://oeis.org/A395695/b395695.txt",
+      "sequence_url": "https://oeis.org/A395695",
+      "access_date": "2026-10-05",
+      "terms": 45,
+      "complete_rows": 9,
+      "sha256": "4648bf753037a3aedcd765cb237cd006f781f984d8b6d6884ed6a4fbbcf16fad",
+      "license": "CC-BY-SA-4.0",
+      "attribution": "The On-Line Encyclopedia of Integer Sequences, The OEIS Foundation Inc."
+    }
+  ],
+  "retrieval": "Public OEIS bfiles read through the web tool; mathematical rows and source headers retained. These snapshots are local reference fixtures, not updates to OEIS. Text line endings are normalized to LF for cross-platform reproducibility.",
+  "oeis_license_url": "https://oeis.org/wiki/The_OEIS_End-User_License_Agreement",
+  "oeis_license": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "verification_scope": "Complete independent enumeration and term comparison through n=8. Stored larger rows receive structural checks only.",
+  "original_repository": "https://github.com/alejandrozu/Clique-OEIS",
+  "original_commit": "70142bdc578a63aca3608e3e97ac5b6684019a48",
+  "original_program_url": "https://github.com/alejandrozu/Clique-OEIS/blob/70142bdc578a63aca3608e3e97ac5b6684019a48/verification_program_CCdominance.py"
+}

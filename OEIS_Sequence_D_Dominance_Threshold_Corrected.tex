@@ -8,7 +8,10 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{hyperref}
-\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black,
+pdftitle={Clique-Size Dominance Threshold Distribution},
+pdfauthor={Alejandro Zarzuelo Urdiales},
+pdfsubject={Revised edition with October 5, 2026 corrigendum and verification supplement}}
 \setlength{\emergencystretch}{2em}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}{Proposition}[section]
@@ -124,7 +127,7 @@ this finite set.
 
 \subsection{Cumulative counts and inclusion--exclusion}
 \begin{theorem}[Difference formula]
-Let $c(n,k)$ count $K_{k+1}$-free labeled graphs. Then
+Let $c(n,k)$ count $K_{k+1}$-free labeled graphs. For $1\leq k\leq n$,
 \[
  D(n,k)=c(n,k),\qquad d(n,k)=c(n,k)-c(n,k-1),
 \]
@@ -322,16 +325,40 @@ Assertions compare clique buckets themselves; totals are additional
 checks rather than substitutes for classification verification.
 
 \section{Formal Verification}
-The revised repository contains a pinned Lean 4 development for the
-finite enumeration framework, together with build instructions and
-continuous verification. Its exact proved scope and compiler output
-are stated in the accompanying formalization documentation.
-\emph{The final verified theorem inventory will be recorded here
-after compilation of the revised formal development.}
-The asymptotic random-graph results are cited classical results,
-not claims of formalization by this development. Computational
-verification of finite rows and formal proofs of structural counting
-identities serve distinct, complementary purposes.
+The revised development uses Lean 4.19.0 and mathlib v4.19.0,
+with pinned dependencies and compilation treating warnings as errors.
+Its graph distribution is defined using genuine simple graphs on
+$\mathrm{Fin}(n)$ and their clique number. The proved results include
+clique-number bounds, the empty and complete graph characterizations,
+boundary values, out-of-range zeros, cumulative prefix sums and
+differences, and an explicit equivalence between graphs and sets of
+unordered edges. This gives the graph total $2^{\binom n2}$ and both
+unweighted and weighted row sums. The count $p^{e(G)}$ of positive
+multiplicity assignments to a fixed support is also proved.
+
+The construction modules define bounded symmetric loopless
+multiplicities and the same-index CC wiring. They prove the
+mixed-clique exclusion, identification of coding clusters as exactly
+the $K$-cliques under $K>\omega(G)$, and multiplicity recovery when
+the coding size has sufficient capacity. A separate development
+proves that, for $K>p$, the closed neighborhoods of minimum
+cardinality recover exactly all coding clusters, without a
+clique-number assumption. This formalizes the recovery argument in
+Section~\ref{sec:corrigendum}. The strict-dominance threshold
+$\omega+1$ is proved as the least integer satisfying that inequality,
+without asserting a necessary minimum for every decoder.
+
+The auxiliary arithmetic module proves parameter bounds, selected
+census properties and exact CC edge-count identities. Its census
+counts parameter pairs; no graph-isomorphism classification is
+asserted. The repository's formalization inventory and compiler
+records state the qualifications of each theorem. The revised
+modules contain no admitted proofs or additional axiom declarations.
+The general inclusion--exclusion and near-diagonal arguments are
+proved mathematically in this paper but are not mechanized here.
+The random-graph asymptotics are cited classical results.
+Computational reproduction of the finite rows is reported separately
+from the formal structural identities.
 
 \section{Applications and Interpretation}
 The primary application is the exact distribution of a standard

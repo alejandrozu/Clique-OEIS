@@ -1,184 +1,193 @@
--- OEIS Sequence Proposals E and F: Lean 4 Formalization
--- Sequence E: CC-Image Vertex Census
--- Sequence F: CC-Image Edge Count Array
---
--- Prerequisites: Lean 4 with Mathlib
--- Install: https://leanprover-community.github.io/get-started.html
-
-import Mathlib.Data.Nat.Defs
-import Mathlib.Data.Int.Defs
+import Mathlib.Data.Nat.Choose.Cast
+import Mathlib.Data.Nat.Prime.Defs
+import Mathlib.Data.Nat.Sqrt
+import Mathlib.Data.Finset.Card
 import Mathlib.Tactic
+
+/-!
+Arithmetic accompanying the CC-image parameter census and edge-count array.
+
+The census counts parameter pairs. No equivalence with graph isomorphism
+classes, necessary minimum coding size, or asymptotic theorem is asserted.
+The prescribed rule here is K = max(p,n)+1 for complete input supports.
+Edge-count identities are stated over the rationals when division is split,
+so natural-number truncation cannot invalidate a polynomial identity.
+-/
 
 namespace CCImageSequences
 
-/-! ## Sequence E: CC-Image Vertex Census
+def ccVertexCount (n p : ℕ) : ℕ := n * (max p n + 1)
 
-For N ≥ 2, a(N) counts the number of pairs (n, p) with n ≥ 1, p ≥ 1
-such that N = n · (max(p, n) + 1).
-
-Equivalently, a(N) counts the number of non-isomorphic simple graphs
-on exactly N vertices that are CC-images of complete p-multigraphs.
--/
-
-/-- The CC-image vertex count for parameters (n, p):
-    N = n · (max(p, n) + 1) -/
-def ccVertexCount (n p : ℕ) : ℕ :=
-  n * (max p n + 1)
-
-/-- A pair (n, p) is valid for vertex count N if
-    n ≥ 1, p ≥ 1, and N = n · (max(p, n) + 1) -/
 def isValidVertexPair (N n p : ℕ) : Bool :=
-  n ≥ 1 && p ≥ 1 && N = ccVertexCount n p
+  decide (1 ≤ n ∧ 1 ≤ p ∧ N = ccVertexCount n p)
 
-/-- Sequence E: CC-Image Vertex Census.
-    a(N) = number of pairs (n, p) with n ≥ 1, p ≥ 1
-    such that N = n · (max(p, n) + 1). -/
-def vertexCensus (N : ℕ) : ℕ :=
-  if N < 2 then 0
-  else
-    (Finset.filter (fun np : ℕ × ℕ =>
-      isValidVertexPair N np.1 np.2)
-      (Finset.product
-        (Finset.Icc 1 N)
-        (Finset.Icc 1 N))).card
+def validVertexPairs (N : ℕ) : Finset (ℕ × ℕ) :=
+  ((Finset.Icc 1 N).product (Finset.Icc 1 N)).filter
+    (fun np => 1 ≤ np.1 ∧ 1 ≤ np.2 ∧ N = ccVertexCount np.1 np.2)
 
-/-- The first term of the formula: number of strictly inferior
-    divisors of N (divisors n with n < N/n).
-    This equals OEIS A056924(N). -/
+def vertexCensus (N : ℕ) : ℕ := (validVertexPairs N).card
+
 def strictlyInferiorDivisors (N : ℕ) : ℕ :=
-  if N = 0 then 0
-  else
-    (Finset.filter (fun n : ℕ =>
-      n ≥ 1 && N % n = 0 && n < N / n)
-      (Finset.Icc 1 N)).card
+  ((Finset.Icc 1 N).filter (fun n => N % n = 0 ∧ n < N / n)).card
 
-/-- Check if N is a pronic (oblong) number: N = m(m+1) for some m ≥ 2.
-    Returns the value of m if found, or 0 otherwise. -/
 def pronicRoot (N : ℕ) : ℕ :=
-  if N < 6 then 0  -- smallest pronic with m ≥ 2 is 2·3 = 6
-  else
+  if N < 6 then 0 else
     let m := (Nat.sqrt (4 * N + 1) - 1) / 2
-    if m * (m + 1) = N ∧ m ≥ 2 then m else 0
+    if m * (m + 1) = N ∧ 2 ≤ m then m else 0
 
-/-- The pronic bonus: m - 1 if N = m(m+1), else 0. -/
 def pronicBonus (N : ℕ) : ℕ :=
   let m := pronicRoot N
   if m = 0 then 0 else m - 1
 
-/-- Main theorem (stated): a(N) = A056924(N) + pronic_bonus(N) -/
-theorem vertexCensus_eq (N : ℕ) (hN : N ≥ 2) :
-    vertexCensus N =
-      strictlyInferiorDivisors N + pronicBonus N := by
-  sorry  -- Requires case analysis on n ≤ p vs n > p
+theorem ccVertexCount_of_n_le_p (n p : ℕ) (h : n ≤ p) :
+    ccVertexCount n p = n * (p + 1) := by
+  simp [ccVertexCount, max_eq_left h]
 
-/-- a(N) ≥ 1 for all N ≥ 2 -/
-theorem vertexCensus_pos (N : ℕ) (hN : N ≥ 2) :
-    vertexCensus N ≥ 1 := by
-  -- The pair (1, N-1) always works since
-  -- N = 1 · max(N-1, 1) + 1 = 1 · (N-1+1) = N
-  sorry
+theorem ccVertexCount_of_p_le_n (n p : ℕ) (h : p ≤ n) :
+    ccVertexCount n p = n * (n + 1) := by
+  simp [ccVertexCount, max_eq_right h]
 
-/-- If N is prime and not pronic, then a(N) = 1 -/
-theorem vertexCensus_prime (N : ℕ) (hPrime : Nat.Prime N) (hNotPronic : pronicRoot N = 0) :
-    vertexCensus N = 1 := by
-  sorry
+theorem ccVertexCount_ge (n p : ℕ) : n * (n + 1) ≤ ccVertexCount n p := by
+  exact Nat.mul_le_mul_left n (Nat.add_le_add_right (le_max_right p n) 1)
 
-/-! ## Sequence F: CC-Image Edge Count Array
+/-- The finite rectangle in the census includes every positive valid pair. -/
+theorem validVertexPair_bounds (N n p : ℕ) (hn : 1 ≤ n)
+    (he : N = ccVertexCount n p) : n ≤ N ∧ p ≤ N := by
+  have hcount := ccVertexCount_ge n p
+  have hmax : p ≤ max p n := le_max_left _ _
+  have hmul : max p n + 1 ≤ n * (max p n + 1) := by
+    simpa using Nat.mul_le_mul_right (max p n + 1) hn
+  unfold ccVertexCount at he hcount
+  constructor
+  · nlinarith
+  · omega
 
-For n ≥ 1 and p ≥ 1, T(n, p) counts the number of edges in the
-CC-image of the complete p-multigraph on n vertices.
+theorem pronicRoot_at_pronic (m : ℕ) (hm : 2 ≤ m) :
+    pronicRoot (m * (m + 1)) = m := by
+  have h6 : ¬ m * (m + 1) < 6 := by nlinarith
+  have hs : 4 * (m * (m + 1)) + 1 = (2 * m + 1) * (2 * m + 1) := by ring
+  simp [pronicRoot, h6, hs, Nat.sqrt_eq, hm]
 
-Piecewise formula:
-  T(n,p) = np(p+n)/2           if n ≤ p
-  T(n,p) = n[n²+(p+1)n-p]/2   if n > p
--/
+theorem pronicBonus_at_pronic (m : ℕ) (hm : 2 ≤ m) :
+    pronicBonus (m * (m + 1)) = m - 1 := by
+  simp [pronicBonus, pronicRoot_at_pronic m hm, show m ≠ 0 by omega]
 
-/-- The CC-image edge count using the direct definition:
-    T(n,p) = n·K(K-1)/2 + n(n-1)p/2
-    where K = max(p, n) + 1 -/
+theorem vertexCensus_pos (N : ℕ) (hN : 2 ≤ N) : 1 ≤ vertexCensus N := by
+  apply Finset.one_le_card.mpr
+  refine ⟨(1, N - 1), ?_⟩
+  have hp : 1 ≤ N - 1 := by omega
+  simp [validVertexPairs, ccVertexCount, max_eq_left hp]
+  omega
+
+theorem vertexCensus_prime (N : ℕ) (hN : Nat.Prime N) : vertexCensus N = 1 := by
+  have hN2 : 2 ≤ N := hN.two_le
+  apply Finset.card_eq_one.mpr
+  refine ⟨(1, N - 1), ?_⟩
+  ext x
+  rcases x with ⟨n, p⟩
+  simp only [validVertexPairs, Finset.mem_filter, Finset.product_eq_sprod, Finset.mem_product,
+    Finset.mem_Icc, Finset.mem_singleton]
+  constructor
+  · rintro ⟨⟨⟨hn, _⟩, ⟨hp, _⟩⟩, _, _, he⟩
+    have hd : n ∣ N := ⟨max p n + 1, he⟩
+    have hcases := (Nat.dvd_prime hN).mp hd
+    have hn1 : n = 1 := by
+      rcases hcases with h | h
+      · exact h
+      · have hmax : n ≤ max p n := le_max_right _ _
+        unfold ccVertexCount at he
+        rw [h] at he hmax
+        nlinarith
+    have hpN : p = N - 1 := by
+      simp [ccVertexCount, hn1, max_eq_left hp] at he
+      omega
+    exact Prod.ext hn1 hpN
+  · intro hx
+    have hnp := Prod.mk.inj hx
+    rcases hnp with ⟨rfl, rfl⟩
+    have hp : 1 ≤ N - 1 := by omega
+    simp [ccVertexCount, max_eq_left hp]
+    omega
+
+theorem vertexCensus_pronic_ge (m : ℕ) (hm : 1 ≤ m) :
+    m ≤ vertexCensus (m * (m + 1)) := by
+  have hi : Function.Injective (fun p : ℕ => (m, p)) := by
+    intro a b h
+    exact (Prod.mk.inj h).2
+  have hs : ((Finset.Icc 1 m).image (fun p : ℕ => (m, p))) ⊆
+      validVertexPairs (m * (m + 1)) := by
+    intro x hx
+    rcases Finset.mem_image.mp hx with ⟨p, hp, rfl⟩
+    rcases Finset.mem_Icc.mp hp with ⟨hp1, hpm⟩
+    have hmN : m ≤ m * (m + 1) := by nlinarith
+    simp [validVertexPairs, ccVertexCount, max_eq_right hpm, hm, hp1,
+      hmN, le_trans hpm hmN]
+  calc
+    m = (Finset.Icc 1 m).card := by simp
+    _ = ((Finset.Icc 1 m).image (fun p : ℕ => (m, p))).card :=
+      (Finset.card_image_of_injective _ hi).symm
+    _ ≤ vertexCensus (m * (m + 1)) := Finset.card_le_card hs
+
+/-- Exact number of intra-cluster and inter-cluster edges under the rule. -/
 def ccEdgeCount (n p : ℕ) : ℕ :=
-  let K := max p n + 1
-  n * K * (K - 1) / 2 + n * (n - 1) * p / 2
+  n * (max p n + 1).choose 2 + p * n.choose 2
 
-/-- The CC-image edge count using the piecewise formula. -/
-def ccEdgeCountPiecewise (n p : ℕ) : ℕ :=
-  if n ≤ p then
-    n * p * (p + n) / 2
-  else
-    n * (n^2 + (p + 1) * n - p) / 2
+/-- The piecewise closed form over ℚ; division is exact field division. -/
+def ccEdgeCountPiecewise (n p : ℕ) : ℚ :=
+  if n ≤ p then (n : ℚ) * p * (p + n) / 2
+  else (n : ℚ) * (n^2 + ((p : ℚ) + 1) * n - p) / 2
 
-/-- The two definitions are equivalent. -/
-theorem ccEdgeCount_eq_piecewise (n p : ℕ) (hn : n ≥ 1) (hp : p ≥ 1) :
-    ccEdgeCount n p = ccEdgeCountPiecewise n p := by
-  simp [ccEdgeCount, ccEdgeCountPiecewise]
+theorem ccEdgeCount_cast (n p : ℕ) :
+    (ccEdgeCount n p : ℚ) =
+      (n : ℚ) * (max p n + 1) * (max p n) / 2 +
+      (p : ℚ) * n * (n - 1) / 2 := by
+  simp only [ccEdgeCount, Nat.cast_add, Nat.cast_mul, Nat.cast_choose_two]
+  push_cast
+  ring
+
+theorem ccEdgeCount_eq_piecewise (n p : ℕ) :
+    (ccEdgeCount n p : ℚ) = ccEdgeCountPiecewise n p := by
+  rw [ccEdgeCount_cast]
+  unfold ccEdgeCountPiecewise
   split_ifs with h
-  · -- Case n ≤ p: K = p + 1
-    simp [max_eq_left h]
-    omega
-  · -- Case n > p: K = n + 1
-    simp [max_eq_right (Nat.not_le.mp h).le]
-    omega
+  · rw [max_eq_left h]
+    ring
+  · rw [max_eq_right (Nat.le_of_lt (Nat.lt_of_not_ge h))]
+    ring
 
-/-- The diagonal T(n, n) = n³ (perfect cubes). -/
-theorem ccEdgeCount_diag (n : ℕ) (hn : n ≥ 1) :
-    ccEdgeCount n n = n^3 := by
-  simp [ccEdgeCount]
-  -- K = n + 1 when n = p
-  have hK : max n n + 1 = n + 1 := by omega
-  rw [hK]
-  -- n(n+1)n/2 + n(n-1)n/2 = n²(n+1)/2 + n²(n-1)/2 = n²·2n/2 = n³
-  omega
+theorem ccEdgeCount_diag (n : ℕ) : ccEdgeCount n n = n^3 := by
+  apply Nat.cast_injective (R := ℚ)
+  rw [ccEdgeCount_eq_piecewise]
+  simp [ccEdgeCountPiecewise]
+  ring
 
-/-- For n > p, T(n, p) is linear in p with coefficient n(n-1)/2.
-    This means rows above the diagonal are arithmetic progressions. -/
-theorem ccEdgeCount_linear_in_p (n p : ℕ) (hn : n ≥ 2) (hp : p ≥ 1) (hnp : n > p) :
-    ccEdgeCount n p = n * (n + 1) * n / 2 + n * (n - 1) * p / 2 := by
-  simp [ccEdgeCount]
-  have : max p n + 1 = n + 1 := by omega
-  rw [this]
-  omega
+theorem ccEdgeCount_linear_in_p (n p : ℕ) (h : p ≤ n) :
+    ccEdgeCount n p = n * (n + 1).choose 2 + p * n.choose 2 := by
+  simp [ccEdgeCount, max_eq_right h]
 
-/-- For n ≤ p, T(n, p) is quadratic in p:
-    T(n, p) = n·p²/2 + n²·p/2 -/
-theorem ccEdgeCount_quadratic_in_p (n p : ℕ) (hn : n ≥ 1) (hp : p ≥ 1) (hnp : n ≤ p) :
-    ccEdgeCount n p = n * p^2 / 2 + n^2 * p / 2 := by
-  simp [ccEdgeCount]
-  have : max p n + 1 = p + 1 := by omega
-  rw [this]
-  omega
+theorem ccEdgeCount_quadratic_in_p (n p : ℕ) (h : n ≤ p) :
+    (ccEdgeCount n p : ℚ) = ((n : ℚ) * p^2 + (n : ℚ)^2 * p) / 2 := by
+  rw [ccEdgeCount_eq_piecewise]
+  simp only [ccEdgeCountPiecewise, if_pos h]
+  ring
 
-/-- Asymptotic edge inflation ratio for fixed p and large n:
-    T(n, p) / e(K_n^(p)) ~ n/p → ∞
-    where e(K_n^(p)) = n(n-1)p/2 is the original edge count. -/
-theorem edge_inflation_ratio (n p : ℕ) (hn : n ≥ 2) (hp : p ≥ 1) (hnp : n > p) :
-    ccEdgeCount n p = n^3/2 + (p+1)*n^2/2 - p*n/2 := by
-  have h1 := ccEdgeCount_linear_in_p n p hn hp hnp
-  simp [ccEdgeCount] at h1
-  have : max p n + 1 = n + 1 := by omega
-  rw [this] at h1
-  omega
+theorem ccEdgeCount_cubic_in_n (n p : ℕ) (h : p ≤ n) :
+    (ccEdgeCount n p : ℚ) =
+      ((n : ℚ)^3 + ((p : ℚ) + 1) * n^2 - (p : ℚ) * n) / 2 := by
+  rw [ccEdgeCount_cast, max_eq_right h]
+  ring
 
-/-! ## Computed Values
-
-  Array T(n,p) for n, p = 1..8:
-
-       p=1   p=2   p=3   p=4   p=5   p=6   p=7   p=8
-  n=1:  1     3     6    10    15    21    28    36
-  n=2:  7     8    15    24    35    48    63    80
-  n=3: 21    24    27    42    60    81   105   132
-  n=4: 46    52    58    64    90   120   154   192
-  n=5: 85    95   105   115   125   165   210   260
-  n=6: 141   156   171   186   201   216   273   336
-  n=7: 217   238   259   280   301   322   343   414
-  n=8: 316   344   372   400   428   456   484   512
-
-  Diagonal: 1, 8, 27, 64, 125, 216, 343, 512 = n³ ✓
-
-  Sequence E for N = 2..30:
-  1, 1, 1, 1, 3, 1, 2, 1, 2, 1, 5, 1, 2, 2, 2,
-  1, 3, 1, 6, 2, 2, 1, 4, 1, 2, 2, 3, 1, 8
-
-  Pronic spikes: a(6)=3, a(12)=5, a(20)=6, a(30)=8, a(42)=9
--/
+/-- At p=n, the exact edge inflation ratio tends to 2, not 1. -/
+theorem balanced_edge_ratio (n : ℕ) (hn : 2 ≤ n) :
+    (ccEdgeCount n n : ℚ) / ((n : ℚ) * n * (n - 1) / 2) =
+      2 * n / (n - 1) := by
+  rw [ccEdgeCount_diag]
+  have hn0 : (n : ℚ) ≠ 0 := by exact_mod_cast (show n ≠ 0 by omega)
+  have hn1 : (n : ℚ) - 1 ≠ 0 := by
+    have : (2 : ℚ) ≤ n := by exact_mod_cast hn
+    linarith
+  push_cast
+  field_simp [hn0, hn1]
+  ring
 
 end CCImageSequences
