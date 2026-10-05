@@ -1,0 +1,27 @@
+name: Build revised paper
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile standalone revised source
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: OEIS_Sequence_D_Dominance_Threshold_Corrected.tex
+      - name: Name the public PDF
+        run: cp OEIS_Sequence_D_Dominance_Threshold_Corrected.pdf Dominance.pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: revised-paper
+          path: Dominance.pdf
+          if-no-files-found: error

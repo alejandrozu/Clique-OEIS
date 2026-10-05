@@ -1,506 +1,537 @@
-
-% Paper 4 (Corrected): Clique-Size Dominance Threshold Distribution
+% Revised source aligned with Zenodo 10.5281/zenodo.20004703.
 \documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
-\usepackage{geometry}
-\usepackage{booktabs}
-\usepackage{array}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs,array,xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{hyperref}
-\usepackage{listings}
-\usepackage{xcolor}
-
-\geometry{margin=2.5cm}
-
-\lstdefinestyle{lean}{
-  basicstyle=\ttfamily\small,
-  keywordstyle=\color{blue}\bfseries,
-  commentstyle=\color{green!50!black}\itshape,
-  stringstyle=\color{red!70!black},
-  breaklines=true,
-  frame=single,
-  language=Haskell,
-  morekeywords={def,theorem,lemma,proof,by,exact,sorry,import,open,namespace,end,if,then,else,let,in,fun,have,show,from,and,or,not,forall,exists,Prop,Type,Sort,Nat,Int,Fin,Finset,Set,sSup,card,filter,rw,simp,use,intro,cases,induction,apply,exact?,omega,decide},
-  literate={->}{{$\to$}}2 {=>}{{$\Rightarrow$}}2 {<->}{{$\leftrightarrow$}}2,
-  xleftmargin=1em,
-  xrightmargin=1em,
-}
-
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}[section]
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+\setlength{\emergencystretch}{2em}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}{Proposition}[section]
-\newtheorem{lemma}{Lemma}[section]
 \newtheorem{corollary}{Corollary}[section]
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
 \newtheorem{remark}{Remark}[section]
-
-\title{OEIS Sequence Proposal: Clique-Size Dominance Threshold Distribution\\
-\large Enumerating Labeled Graphs by Clique Number and the Minimum Coding Clique Size}
-\author{Alejandro Zarzuelo Urdiales\\
-Department of Mathematics, University of Oviedo\\
-UO275823@uniovi.es}
-\date{May 2026}
-
+\newcommand{\Kdom}{K_{\mathrm{dom}}}
+\newcommand{\Graph}{\mathcal G_n}
+\title{Clique-Size Dominance Threshold Distribution\\[0.3em]
+\large Enumerating Labeled Graphs by Clique Number\\[0.2em]
+\normalsize Revised edition with corrigendum and verification supplement}
+\author{Alejandro Zarzuelo Urdiales\\\texttt{alejandro@archivara.org}}
+\date{May 2026; revised October 5, 2026}
 \begin{document}
 \maketitle
-
 \begin{abstract}
-This paper proposes a new integer sequence for the OEIS: the triangle $d(n, k)$ counting the number of labeled simple graphs on $n$ vertices with clique number exactly $k$. The unlabeled analog exists as OEIS A263341, but the labeled version is absent from the OEIS. By the Clique-Size Dominance Theorem, the minimum coding clique size required for faithful CC-transformation of such graphs is $K_{\min} = k + 1$. This triangle thus provides a complete distribution of the dominance threshold across the space of all labeled graphs, with applications to graph encoding, Ramsey theory, and the theory of homogeneous structures. We provide a verified computation of $d(n, k)$ for $n \leq 8$, the extension to $p$-multigraphs, and a Lean 4 formalization of the core definitions and structural theorems.
+We enumerate labeled simple graphs on $n$ vertices by their clique number,
+giving the triangle $d(n,k)$ of graphs with clique number exactly $k$.
+The triangle is recorded in the OEIS as A395684; its bounded-multiplicity
+extensions and cumulative distribution are A395691--A395695.
+It provides an exact finite distribution of clique sizes and, under the
+chosen clique-dominance convention $K>\omega(G)$, of the threshold
+$\Kdom=\omega(G)+1$. We give verified values for $n\leq8$, exact
+near-diagonal formulas, the weighting formula for labeled $p$-multigraphs,
+and reproducible computational and formal verification material.
+This revision retains the enumerative results and all independently
+reproduced sequence terms. A dated corrigendum clarifies the precision of
+the random-graph approximation, the expansion discussion, related OEIS
+comparisons, an overlap expression, and the distinction between a chosen
+dominance threshold and a necessary minimum for lossless decoding.
 \end{abstract}
 
 \section{Introduction}
-
-The Clique-Size Dominance condition $K > \omega(G)$ is the sharp threshold for the bijectivity of the Clique-Cluster Transformation \cite{zarzuelo2025}. For a graph $G$ with clique number $\omega(G) = k$, the minimum valid coding clique size is:
+The Clique-Cluster (CC) transformation replaces each input vertex with a
+coding clique and represents an edge of multiplicity $q$ by $q$
+same-index edges between its coding cliques \cite{zarzuelo2025}.
+For a simple input graph $G$, choosing a coding size $K>\omega(G)$
+ensures that coding cliques are larger than transversal cliques.
+The least integer satisfying this imposed dominance condition is
 \[
-K_{\min}(G) = k + 1.
+  \Kdom(G)=\omega(G)+1.
 \]
+This is a prescribed coding rule, rather than a claim that no smaller
+lossless encoding or different decoder is possible.
 
-This paper formalizes the enumeration of labeled graphs by their clique number and proposes the resulting triangle for inclusion in the OEIS. The unlabeled analog of this triangle exists as OEIS A263341, and the labeled analog for chromatic number exists as OEIS A058843, but the labeled-by-clique-number triangle is a genuine gap in the OEIS.
+The natural enumerative question is how clique numbers are distributed
+over all $2^{\binom n2}$ labeled graphs on $n$ vertices. The present triangle
+answers that question exactly. Its unlabeled counterpart is OEIS
+A263341, using graph complementation. The labeled triangle and its
+extensions were accepted as A395684 and A395691--A395695 in May 2026
+\cite{oeis}. Their definitions and counts are independent of the CC
+interpretation and of random-graph asymptotics.
+
+The resulting distributions are relevant to finite graph enumeration,
+$K_{k+1}$-free graph counting, and analysis of the chosen coding rule.
+Section~11 records the clarifications to the May 2026 edition.
+These clarifications do not alter the finite enumerative contribution.
 
 \section{Definitions}
-
-\begin{definition}[Clique Number]
-For a simple graph $G = (V, E)$, the \emph{clique number} $\omega(G)$ is the size of the largest subset $S \subseteq V$ such that every pair of distinct vertices in $S$ is connected by an edge:
+Let $\Graph$ denote the simple graphs on the fixed labeled vertex set
+$[n]=\{1,\ldots,n\}$, with $n\geq1$.
+\begin{definition}[Clique number]
+For $G=([n],E)$, define
 \[
-\omega(G) = \max\{ |S| : S \subseteq V,\; \forall\, \{u,v\} \subseteq S,\; u \neq v \Rightarrow \{u,v\} \in E \}.
+ \omega(G)=\max\{|S|:S\subseteq[n],\ \binom S2\subseteq E\}.
 \]
+Here $\binom S2$ is the set of unordered pairs of distinct vertices
+of $S$.
 \end{definition}
-
-\begin{definition}[Clique-Size Dominance Threshold]
-For a graph $G$ with $\omega(G) = k$, the \emph{dominance threshold} is:
-\[
-\tau(G) = k + 1.
-\]
-This is the minimum coding clique size $K$ for which the CC-transformation $f_{CC}$ is bijective on $G$.
+\begin{definition}[Dominance threshold]
+The clique-dominance threshold is $\tau(G)=\omega(G)+1$.
+Thus $\tau(G)$ is the least integer $K$ satisfying $K>\omega(G)$.
+For simple graphs we also write $\Kdom(G)=\tau(G)$.
 \end{definition}
-
-\begin{definition}[Sequence D: Dominance Threshold Distribution]
-For $n \geq 1$ and $1 \leq k \leq n$, the triangle $d(n, k)$ is defined as:
+\begin{definition}[Exact distribution]
+For $1\leq k\leq n$, define
 \[
-d(n, k) = \left| \left\{ G : G \text{ is a labeled simple graph on } n \text{ vertices with } \omega(G) = k \right\} \right|.
+ d(n,k)=|\{G\in\Graph:\omega(G)=k\}|.
 \]
+Set $d(n,k)=0$ outside this range. These are the rows of A395684.
 \end{definition}
-
-\begin{definition}[Cumulative Distribution]
-The cumulative triangle $D(n, k)$ counts labeled simple graphs on $n$ vertices with clique number \emph{at most} $k$:
+\begin{definition}[Cumulative distribution]
+Define
 \[
-D(n, k) = \sum_{j=1}^{k} d(n, j).
+ D(n,k)=\sum_{j=1}^{k}d(n,j),\qquad D(n,0)=0.
 \]
-Equivalently, $D(n, k)$ is the number of $K_{k+1}$-free labeled graphs on $n$ vertices.
+Equivalently, $D(n,k)$ counts graphs with clique number at most $k$.
+These are the rows of A395695.
 \end{definition}
 
 \section{Main Results}
-
-\subsection{Structural Properties}
-
-\begin{theorem}[Boundary Values]
-The triangle $d(n, k)$ satisfies the following boundary conditions:
-\begin{enumerate}
-\item $d(n, 1) = 1$ for all $n \geq 1$ (only the empty graph has clique number 1).
-\item $d(n, n) = 1$ for all $n \geq 1$ (only the complete graph $K_n$ has clique number $n$).
-\item $d(n, k) = 0$ for $k < 1$ or $k > n$.
-\end{enumerate}
+\subsection{Structural properties}
+\begin{theorem}[Boundary values]
+For $n\geq1$, $d(n,1)=d(n,n)=1$.
 \end{theorem}
-
 \begin{proof}
-(1) The only labeled graph on $n$ vertices with no edges is the empty graph, which has clique number 1 (a single vertex forms a clique of size 1). This graph is unique.
-
-(2) The only labeled graph on $n$ vertices with clique number $n$ is the complete graph $K_n$, in which every pair of vertices is adjacent. This graph is unique.
-
-(3) Immediate from the definition: the clique number of an $n$-vertex graph lies in $\{1, 2, \ldots, n\}$.
+A graph has clique number one exactly when it has no edges, so the
+empty graph is the unique member of the first bucket. A graph on
+$n$ vertices has clique number $n$ exactly when it is complete.
+\end{proof}
+\begin{theorem}[Row sum]
+For $n\geq1$,
+\[
+ \sum_{k=1}^{n}d(n,k)=2^{\binom n2}.
+\]
+\end{theorem}
+\begin{proof}
+Each of the $\binom n2$ possible edges is present or absent independently
+in specifying a labeled graph. The clique-number buckets partition
+this finite set.
 \end{proof}
 
-\begin{theorem}[Row Sum]
-For all $n \geq 1$:
+\subsection{Cumulative counts and inclusion--exclusion}
+\begin{theorem}[Difference formula]
+Let $c(n,k)$ count $K_{k+1}$-free labeled graphs. Then
 \[
-\sum_{k=1}^{n} d(n, k) = 2^{\binom{n}{2}}.
+ D(n,k)=c(n,k),\qquad d(n,k)=c(n,k)-c(n,k-1),
 \]
+with $c(n,0)=0$ and $c(n,n)=2^{\binom n2}$.
 \end{theorem}
-
 \begin{proof}
-The total number of labeled simple graphs on $n$ vertices is $2^{\binom{n}{2}}$, since each of the $\binom{n}{2}$ potential edges is either present or absent. The sets $\{G : \omega(G) = k\}$ partition this total by clique number.
+A graph is $K_{k+1}$-free exactly when its clique number is at most $k$.
+Subtracting graphs with clique number at most $k-1$ leaves those
+with clique number exactly $k$.
 \end{proof}
+For completeness, ordinary inclusion--exclusion gives
+\begin{equation}\label{eq:ie}
+ c(n,k)=\sum_{\mathcal F\subseteq\binom{[n]}{k+1}}
+ (-1)^{|\mathcal F|}
+ 2^{\binom n2-\left|\bigcup_{S\in\mathcal F}\binom S2\right|}.
+\end{equation}
+Indeed, the intersection of clique events indexed by $\mathcal F$
+forces exactly the edges in the displayed union; every other edge is
+free. The empty family contributes $2^{\binom n2}$.
 
-\subsection{Exact Formula via Inclusion-Exclusion}
-
-\begin{theorem}[Inclusion-Exclusion Formula]
-Let $c(n, k)$ denote the number of labeled simple graphs on $n$ vertices that are $K_{k+1}$-free (i.e., have no clique of size $k+1$). Then:
-\[
-D(n, k) = c(n, k),
-\]
-and:
-\[
-d(n, k) = c(n, k) - c(n, k-1),
-\]
-where $c(n, 0) = 0$ and $c(n, n) = 2^{\binom{n}{2}}$ (all graphs).
+\subsection{Near-diagonal formulas}
+\begin{theorem}[Near-diagonal closed forms]
+For $n\geq2$,
+\begin{align*}
+ d(n,n-1)&=n2^{n-1}-\binom n2-n,\\
+ c(n,n-2)&=2^{\binom n2}-n2^{n-1}+\binom n2+n-1.
+\end{align*}
 \end{theorem}
-
 \begin{proof}
-A graph has clique number at most $k$ if and only if it contains no $K_{k+1}$ subgraph. The count $c(n, k)$ is exactly the number of $K_{k+1}$-free labeled graphs on $n$ vertices. The difference $c(n, k) - c(n, k-1)$ counts graphs with no $K_{k+1}$ but at least one $K_k$, which is precisely the set of graphs with clique number exactly $k$.
-\end{proof}
-
-\subsection{Explicit Formula for $c(n, k)$}
-
-\begin{theorem}[Tur\'an-Type Counting]
-The number of $K_{k+1}$-free labeled graphs on $n$ vertices is:
+For each vertex $v_i$, let $A_i$ be the event that $[n]\setminus\{v_i\}$
+is a clique. Then $|A_i|=2^{n-1}$, and $|A_i\cap A_j|=2$ for
+$i\neq j$: only the edge $\{v_i,v_j\}$ remains free. An intersection
+of three or more distinct events forces the complete graph and has
+size one. Thus
 \[
-c(n, k) = 2^{\binom{n}{2}} - \sum_{j=1}^{\lfloor n/(k+1) \rfloor} (-1)^{j+1} \binom{n}{k+1, k+1, \ldots, k+1, n - j(k+1)} \cdot 2^{\binom{n}{2} - j\binom{k+1}{2}},
+ \left|\bigcup_i A_i\right|
+ =n2^{n-1}-2\binom n2+
+ \sum_{j=3}^{n}(-1)^{j+1}\binom nj
+ =n2^{n-1}-\binom n2-n+1.
 \]
-where the multinomial coefficient counts the ways to choose $j$ disjoint $(k+1)$-subsets and the power of 2 counts the remaining edge choices.
-\end{theorem}
-
-\begin{remark}
-This formula is the standard inclusion-exclusion over cliques of size $k+1$. For computational purposes, the sum converges rapidly for small $k$ relative to $n$.
+Removing the complete graph proves the first formula. Subtracting
+$d(n,n-1)+d(n,n)$ from the total gives the second. The empty higher
+intersection sum at $n=2$ gives the same identities.
+\end{proof}
+\begin{remark}[Overlap bookkeeping]\label{rem:overlap}
+General intersections depend on the entire overlap pattern.
+For two $(k+1)$-subsets intersecting in $t$ vertices, the forced-edge
+count is
+\[
+ 2\binom{k+1}{2}-\binom t2.
+\]
+More generally it is the cardinality of the edge union in
+\eqref{eq:ie}, or equivalently
+\[
+ \sum_{\varnothing\neq I\subseteq\{1,\ldots,r\}}
+ (-1)^{|I|+1}\binom{\left|\bigcap_{i\in I}S_i\right|}{2}.
+\]
+This corrects the informal overlap expression in the original
+Remark~3.1; the tabulations and near-diagonal proof do not use that
+expression.
 \end{remark}
 
-\subsection{Extension to $p$-Multigraphs}
-
-\begin{theorem}[$p$-Multigraph Clique Number Distribution]
-Let $d_p(n, k)$ denote the number of labeled $p$-multigraphs on $n$ vertices with clique number exactly $k$. Then:
+\subsection{Extension to bounded-multiplicity graphs}
+\begin{definition}[$p$-multigraph]
+A labeled $p$-multigraph assigns a multiplicity
+$\mu:\binom{[n]}2\to\{0,1,\ldots,p\}$. Its clique number is that of
+the underlying simple graph with edge set $\{e:\mu(e)>0\}$.
+\end{definition}
+\begin{theorem}[Weighted distribution]
+For $p\geq1$, the number $d_p(n,k)$ of these multigraphs with clique
+number $k$ is
 \[
-d_p(n, k) = \sum_{\substack{G \text{ simple on } n \text{ vertices} \\ \omega(G) = k}} p^{e(G)},
+ d_p(n,k)=\sum_{\substack{G\in\Graph\\\omega(G)=k}}p^{e(G)}.
 \]
-where $e(G)$ is the number of edges in $G$.
 \end{theorem}
-
 \begin{proof}
-For a fixed simple graph $G$ with $e(G)$ edges, each edge can have multiplicity $1, 2, \ldots, p$ (since positive multiplicity is required for the edge to contribute to the clique structure). Non-edges have multiplicity 0. Thus there are exactly $p^{e(G)}$ labeled $p$-multigraphs whose underlying simple graph is $G$. Summing over all simple graphs with $\omega(G) = k$ yields the formula.
+Each present edge of a fixed support graph $G$ has $p$ possible
+positive multiplicities. Nonedges have multiplicity zero. Hence $G$
+has exactly $p^{e(G)}$ preimages. Summing over supports proves the
+formula.
 \end{proof}
-
-\begin{corollary}[Row Sum for $p$-Multigraphs]
-For all $n \geq 1$ and $p \geq 1$:
-\[
-\sum_{k=1}^{n} d_p(n, k) = (p+1)^{\binom{n}{2}}.
-\]
+\begin{corollary}[Multigraph row sum]
+$\sum_{k=1}^{n}d_p(n,k)=(p+1)^{\binom n2}$.
 \end{corollary}
-
 \begin{proof}
-Each of the $\binom{n}{2}$ edges can have multiplicity $0, 1, \ldots, p$, giving $(p+1)^{\binom{n}{2}}$ total $p$-multigraphs.
+Each unordered vertex pair has $p+1$ multiplicity choices, including
+zero. Clique-number buckets partition those assignments.
 \end{proof}
 
 \section{Computational Results}
+The original tables below are retained. Additional verification in
+October 2026 independently reproduced every term of all six sequences
+through $n=8$. Two distinct clique-number methods enumerated all
+$2^{28}=268{,}435{,}456$ labeled eight-vertex simple graphs and agreed
+with the stored weighted rows for $p=1,\ldots,5$.
 
-All values were computed by exhaustive enumeration of labeled graphs, with verification by row sums. The computation for $n \leq 6$ used direct enumeration; for $n = 7, 8$, a profile-based algorithm was employed.
+\subsection{Labeled simple graphs by clique number}
+\begin{center}\scriptsize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{r|rrrrrrrr}\toprule
+$n\backslash k$&1&2&3&4&5&6&7&8\\\midrule
+1&1\\2&1&1\\3&1&6&1\\4&1&40&22&1\\
+5&1&387&570&65&1\\6&1&5788&21837&4970&171&1\\
+7&1&133500&1353096&576247&33887&420&1\\
+8&1&4682269&142458868&110940707&10151470&201152&988&1\\\bottomrule
+\end{tabular}\end{center}
+The totals are $2^{\binom n2}$, and the penultimate entries agree with
+Theorem~3.4; for example $d(8,7)=988$.
 
-\subsection{Triangle $d(n, k)$: Labeled Simple Graphs by Clique Number}
+\subsection{Cumulative distribution}
+\begin{center}\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{r|rrrrrrrr}\toprule
+$n\backslash k$&1&2&3&4&5&6&7&8\\\midrule
+1&1\\2&1&2\\3&1&7&8\\4&1&41&63&64\\
+5&1&388&958&1023&1024\\
+6&1&5789&27626&32596&32767&32768\\
+7&1&133501&1486597&2062844&2096731&2097151&2097152\\
+8&1&4682270&147141138&258081845&268233315&268434467&268435455&268435456\\\bottomrule
+\end{tabular}\end{center}
+The column $D(n,2)$ counts labeled triangle-free graphs and agrees
+with A213434. Each final entry is the total $2^{\binom n2}$.
 
-\begin{center}
-\begin{tabular}{c|cccccccc}
-\toprule
-$n \backslash k$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
-\midrule
-1 & 1 & & & & & & & \\
-2 & 1 & 1 & & & & & & \\
-3 & 1 & 6 & 1 & & & & & \\
-4 & 1 & 40 & 22 & 1 & & & & \\
-5 & 1 & 387 & 570 & 65 & 1 & & & \\
-6 & 1 & 5788 & 21837 & 4970 & 171 & 1 & & \\
-7 & 1 & 133500 & 1353096 & 576247 & 33887 & 420 & 1 & \\
-8 & 1 & 4682269 & 142458868 & 110940707 & 10151470 & 201152 & 988 & 1 \\
-\bottomrule
-\end{tabular}
-\end{center}
+\subsection{Labeled 2-multigraphs by clique number}
+\begin{center}\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{r|rrrrrrr}\toprule
+$n\backslash k$&1&2&3&4&5&6&7\\\midrule
+1&1\\2&1&2\\3&1&18&8\\4&1&248&416&64\\
+5&1&6264&36080&15680&1024\\
+6&1&294986&6434528&6536000&1050624&32768\\
+7&1&25126170&2555681112&5913294912&1833638912&130514944&2097152\\\bottomrule
+\end{tabular}\end{center}
+These totals are $3^{\binom n2}$. Complete verification data for all
+$p=1,\ldots,5$ through $n=8$ are in the repository.
 
-\textbf{Verification by row sums:}
-\begin{itemize}
-\item $n = 3$: $1 + 6 + 1 = 8 = 2^3$ \checkmark
-\item $n = 4$: $1 + 40 + 22 + 1 = 64 = 2^6$ \checkmark
-\item $n = 5$: $1 + 387 + 570 + 65 + 1 = 1024 = 2^{10}$ \checkmark
-\item $n = 6$: $1 + 5788 + 21837 + 4970 + 171 + 1 = 32768 = 2^{15}$ \checkmark
-\item $n = 7$: $1 + 133500 + 1353096 + 576247 + 33887 + 420 + 1 = 2097152 = 2^{21}$ \checkmark
-\item $n = 8$: $1 + 4682269 + 142458868 + 110940707 + 10151470 + 201152 + 988 + 1 = 268435456 = 2^{28}$ \checkmark
-\end{itemize}
+\subsection{Dominance-threshold distribution}
+For simple graphs, the number receiving $\Kdom=k+1$ under the
+specified dominance rule is exactly $d(n,k)$: it is the same table
+with shifted column labels. For a multigraph with actual maximum
+multiplicity $P$, the safe rule in the cited construction is
+$K=\max(P,\omega(G))+1$; clique number alone does not specify its
+entire parameter choice.
 
-The triangle read by rows (omitting zeros) begins:
-\[
-1, 1, 1, 1, 6, 1, 1, 40, 22, 1, 1, 387, 570, 65, 1, 1, 5788, 21837, 4970, 171, 1, \ldots
-\]
-
-\subsection{Cumulative Distribution $D(n, k)$}
-
-\begin{center}
-\begin{tabular}{c|cccccccc}
-\toprule
-$n \backslash k$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
-\midrule
-1 & 1 & & & & & & & \\
-2 & 1 & 2 & & & & & & \\
-3 & 1 & 7 & 8 & & & & & \\
-4 & 1 & 41 & 63 & 64 & & & & \\
-5 & 1 & 388 & 958 & 1023 & 1024 & & & \\
-6 & 1 & 5789 & 27626 & 32596 & 32767 & 32768 & & \\
-7 & 1 & 133501 & 1486597 & 2062844 & 2096731 & 2097151 & 2097152 & \\
-8 & 1 & 4682270 & 147141138 & 258081845 & 268233315 & 268434467 & 268435455 & 268435456 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\subsection{Notable Column Sequences}
-
-The column $D(n, 2)$ counts $K_3$-free (triangle-free) labeled graphs on $n$ vertices. The values are $1, 2, 7, 41, 388, 5789, 133501, 4682270, \ldots$, which coincides with OEIS A006785.
-
-\subsection{Triangle $d_2(n, k)$: Labeled 2-Multigraphs by Clique Number}
-
-\begin{center}
-\begin{tabular}{c|ccccccc}
-\toprule
-$n \backslash k$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\
-\midrule
-1 & 1 & & & & & & \\
-2 & 1 & 2 & & & & & \\
-3 & 1 & 18 & 8 & & & & \\
-4 & 1 & 248 & 416 & 64 & & & \\
-5 & 1 & 6264 & 36080 & 15680 & 1024 & & \\
-6 & 1 & 294986 & 6434528 & 6536000 & 1050624 & 32768 & \\
-7 & 1 & 25126170 & 2555681112 & 5913294912 & 1833638912 & 130514944 & 2097152 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\textbf{Verification by row sums:}
-\begin{itemize}
-\item $n = 3$: $1 + 18 + 8 = 27 = 3^3$ \checkmark
-\item $n = 4$: $1 + 248 + 416 + 64 = 729 = 3^6$ \checkmark
-\item $n = 5$: $1 + 6264 + 36080 + 15680 + 1024 = 59049 = 3^{10}$ \checkmark
-\item $n = 6$: $1 + 294986 + 6434528 + 6536000 + 1050624 + 32768 = 14348907 = 3^{15}$ \checkmark
-\item $n = 7$: $1 + 25126170 + 2555681112 + 5913294912 + 1833638912 + 130514944 + 2097152 = 10460353203 = 3^{21}$ \checkmark
-\end{itemize}
-
-\subsection{Minimum Coding Clique Size Distribution}
-
-The dominance threshold distribution directly gives the minimum coding clique size $K_{\min} = k + 1$ for each graph. The following table shows the number of labeled graphs requiring each $K_{\min}$:
-
-\begin{center}
-\begin{tabular}{c|ccccccc}
-\toprule
-$n \backslash K_{\min}$ & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
-\midrule
-1 & 1 & & & & & & \\
-2 & 1 & 1 & & & & & \\
-3 & 1 & 6 & 1 & & & & \\
-4 & 1 & 40 & 22 & 1 & & & \\
-5 & 1 & 387 & 570 & 65 & 1 & & \\
-6 & 1 & 5788 & 21837 & 4970 & 171 & 1 & \\
-7 & 1 & 133500 & 1353096 & 576247 & 33887 & 420 & 1 \\
-\bottomrule
-\end{tabular}
-\end{center}
+\subsection{Verification scope}
+The supplied clique oracle was checked against explicit vertex-subset
+testing for all 33,867 graphs with $1\leq n\leq6$. Separate exhaustive
+runs checked all 2,097,152 seven-vertex graphs and all eight-vertex
+graphs. The resulting $(\omega,e)$ histograms reproduce all five
+weighted distributions and their exact totals. Cumulative rows are
+checked by termwise prefix sums.
+The later published rows, through $n=12$ for $p=1$ and $n=11$ for
+$p=2,\ldots,5$, additionally pass endpoint, total and near-diagonal
+checks. Their larger interior entries were not exhaustively recomputed
+in the October verification. These limits are recorded explicitly
+with the reproducibility material.
 
 \section{OEIS Cross-References}
-
 \begin{itemize}
-\item \textbf{A263341}: Triangle of unlabeled simple graphs on $n$ vertices with independence number $k$. By complement, this also counts unlabeled graphs by clique number. Our triangle $d(n,k)$ is the \emph{labeled} version of this triangle.
-\item \textbf{A058843}: Triangle of labeled graphs on $n$ vertices by chromatic number. This is the chromatic-number analog of our clique-number triangle; the existence of this labeled-by-chromatic-number triangle but the absence of the labeled-by-clique-number triangle confirms the gap we fill.
-\item \textbf{A000088}: Number of unlabeled simple graphs on $n$ nodes. Row sums of A263341.
-\item \textbf{A006125}: Number of labeled simple graphs on $n$ nodes $= 2^{\binom{n}{2}}$. Row sums of our triangle $d(n,k)$.
-\item \textbf{A006785}: Triangle-free labeled graphs on $n$ nodes. Coincides with our column $D(n,2)$.
-\item \textbf{A052450, A052451, A052452}: Unlabeled graphs with clique number 2, 3, 4 respectively. Unlabeled column sequences.
-\item \textbf{A000088, A004102, A063841}: Enumeration of simple graphs, 2-multigraphs, and $k$-multigraphs, connected to the CC-transformation via the Clique-Size Dominance condition.
+\item A395684: the labeled clique-number triangle $d(n,k)$.
+\item A395691--A395694: $d_p(n,k)$ for $p=2,3,4,5$ respectively.
+\item A395695: the cumulative triangle $D(n,k)$.
+\item A263341: the unlabeled analogue, equivalently by independence
+number under complementation. At $n=4,k=2$ its entry is $6$, compared
+with the labeled count $d(4,2)=40$.
+\item A058843: labeled graphs equipped with a proper partition into
+$k$ nonempty color classes, with permutations of color names
+identified. It is not a distribution by chromatic number. Its
+$n=4$ row is $1,80,192,64$.
+\item A006125: the total $2^{\binom n2}$, the row sums of $d(n,k)$.
+\item A213434: labeled triangle-free graphs, the column $D(n,2)$.
+\item A000088: unlabeled simple graph totals, the row sums of A263341.
 \end{itemize}
+Clique number and chromatic number are different invariants: the
+five-cycle has clique number two and chromatic number three. For
+four vertices, however, every triangle-free graph is bipartite, so
+both exact-two counts equal $40$. The earlier value $31$ was not a
+valid chromatic-number comparison.
 
 \section{Algorithmic Implementation}
+The independent verification records, for each edge count $e$, the
+number $H_n(k,e)$ of graphs with clique number $k$. It then evaluates
+\[
+ d_p(n,k)=\sum_{e=0}^{\binom n2}H_n(k,e)p^e.
+\]
+One oracle tests candidate vertex subsets directly for all required
+edges. A second uses the induced-subgraph recurrence
+\[
+ \omega(G[S])=\max\bigl(\omega(G[S\setminus\{v\}]),\,
+ 1+\omega(G[(S\setminus\{v\})\cap N(v)])\bigr).
+\]
+This follows by separating cliques that omit $v$ from those that
+contain it. The eight-vertex run enumerates all seven-vertex graphs
+and all possible neighborhoods of the last vertex.
+The repository includes portable scripts, saved expected terms,
+per-term comparisons, result files and exact-arithmetic checks.
+Assertions compare clique buckets themselves; totals are additional
+checks rather than substitutes for classification verification.
 
-The following Python implementation computes $d(n, k)$ by exhaustive enumeration with branch-and-bound clique number computation:
+\section{Formal Verification}
+The revised repository contains a pinned Lean 4 development for the
+finite enumeration framework, together with build instructions and
+continuous verification. Its exact proved scope and compiler output
+are stated in the accompanying formalization documentation.
+\emph{The final verified theorem inventory will be recorded here
+after compilation of the revised formal development.}
+The asymptotic random-graph results are cited classical results,
+not claims of formalization by this development. Computational
+verification of finite rows and formal proofs of structural counting
+identities serve distinct, complementary purposes.
 
-\begin{verbatim}
-from itertools import combinations
-from collections import Counter
+\section{Applications and Interpretation}
+The primary application is the exact distribution of a standard
+graph invariant across finite labeled graphs. The cumulative values
+give counts of $K_{k+1}$-free graphs, and the weighted extensions
+give the analogous finite census with bounded edge multiplicities.
+These are concrete enumerative objects independent of any encoding.
 
-def max_clique(n, edges):
-    """Compute clique number using Bron-Kerbosch with pivot."""
-    adj = [set() for _ in range(n)]
-    for u, v in edges:
-        adj[u].add(v)
-        adj[v].add(u)
-
-    def bron_kerbosch(R, P, X):
-        if not P and not X:
-            yield len(R)
-            return
-        pivot = max(P | X, key=lambda v: len(P & adj[v]))
-        for v in list(P - adj[pivot]):
-            yield from bron_kerbosch(
-                R | {v}, P & adj[v], X & adj[v])
-            P.remove(v)
-            X.add(v)
-
-    return max(bron_kerbosch(set(), set(range(n)), set()), default=0)
-
-def compute_d(n):
-    """Compute d(n,k) for all k by exhaustive enumeration."""
-    vertices = list(range(n))
-    potential_edges = list(combinations(vertices, 2))
-    counts = Counter()
-    for mask in range(1 << len(potential_edges)):
-        edges = [potential_edges[i] for i in range(len(potential_edges))
-                 if mask & (1 << i)]
-        omega = max_clique(n, edges)
-        counts[omega] += 1
-    return counts
-
-# Compute and verify
-for n in range(1, 7):
-    counts = compute_d(n)
-    total = sum(counts.values())
-    expected = 2 ** (n * (n - 1) // 2)
-    assert total == expected, f"n={n}: {total} != {expected}"
-    row = [counts.get(k, 0) for k in range(1, n + 1)]
-    print(f"n={n}: {row}")
-\end{verbatim}
-
-\section{Lean 4 Formalization}
-
-We provide a Lean 4 formalization of the core definitions and structural theorems. The formalization uses Mathlib's \texttt{SimpleGraph} type and establishes the boundary conditions and row-sum property.
-
-\begin{lstlisting}[style=lean, caption={Lean 4 formalization of the Dominance Threshold Distribution}]
--- Dominance Threshold Distribution: Lean 4 Formalization
--- Triangle d(n,k): labeled simple graphs on n vertices
---                 with clique number exactly k
-
-import Mathlib.Combinatorics.SimpleGraph.Basic
-import Mathlib.Data.Fintype.Card
-import Mathlib.Data.Finset.Basic
-import Mathlib.Tactic
-
-namespace DominanceThreshold
-
-open Finset
-
-/-! ## Clique Number for Finite Simple Graphs -/
-
-/-- A clique in a simple graph is a set of pairwise adjacent vertices -/
-def IsClique {V : Type*} [DecidableEq V] (G : SimpleGraph V)
-    (S : Finset V) : Prop :=
-  ∀ x ∈ S, ∀ y ∈ S, x ≠ y → G.Adj x y
-
-/-- The clique number of a simple graph on Fin n -/
-def cliqueNumber (n : ℕ) (G : SimpleGraph (Fin n)) : ℕ :=
-  sSup { k : ℕ |
-    ∃ S : Finset (Fin n), S.card = k ∧ IsClique G S }
-
-/-! ## The Triangle d(n, k) -/
-
-/-- Number of labeled simple graphs on n vertices with
-    clique number exactly k -/
-def d (n k : ℕ) : ℕ :=
-  if hnk : 1 ≤ k ∧ k ≤ n then
-    (Finset.filter
-      (fun (G : SimpleGraph (Fin n)) =>
-        cliqueNumber n G = k)
-      Finset.univ).card
-  else 0
-
-/-- Number of labeled simple graphs on n vertices with
-    clique number at most k (= K_{k+1}-free graphs) -/
-def D (n k : ℕ) : ℕ :=
-  if hk : 1 ≤ k then
-    (Finset.filter
-      (fun (G : SimpleGraph (Fin n)) =>
-        cliqueNumber n G ≤ k)
-      Finset.univ).card
-  else 0
-
-/-! ## Boundary Theorems -/
-
-/-- Only the empty graph has clique number 1 -/
-theorem d_first_col (n : ℕ) (hn : 1 ≤ n) : d n 1 = 1 := by
-  unfold d
-  simp [show (1 : ℕ) ≤ 1 ∧ 1 ≤ n from ⟨le_refl 1, hn⟩]
-  -- The only graph with clique number 1 is the bot (empty graph)
-  have h_card :
-    (Finset.filter (fun G => cliqueNumber n G = 1)
-      (Finset.univ : Finset (SimpleGraph (Fin n)))).card = 1 := by
-    -- Two steps: (1) bot has clique number 1
-    -- (2) any non-empty graph has clique number >= 2
-    sorry  -- Requires graph-theoretic reasoning about clique number
-  exact h_card
-
-/-- Only the complete graph has clique number n -/
-theorem d_diag (n : ℕ) (hn : 1 ≤ n) : d n n = 1 := by
-  unfold d
-  simp [show (1 : ℕ) ≤ n ∧ n ≤ n from ⟨hn, le_refl n⟩]
-  have h_card :
-    (Finset.filter (fun G => cliqueNumber n G = n)
-      (Finset.univ : Finset (SimpleGraph (Fin n)))).card = 1 := by
-    -- (1) the top (complete graph) has clique number n
-    -- (2) any graph missing an edge has clique number < n
-    sorry  -- Requires graph-theoretic reasoning about clique number
-  exact h_card
-
-/-- The row sum equals 2^(n choose 2) -/
-theorem row_sum_eq (n : ℕ) (hn : 1 ≤ n) :
-    ∑ k in Finset.Icc 1 n, d n k =
-      2 ^ (n * (n - 1) / 2) := by
-  -- The sets {G : omega(G) = k} partition all graphs
-  -- Total number of labeled graphs = 2^(n choose 2)
-  sorry  -- Requires partition argument + counting of Fintype
-
-/-- d(n,k) = D(n,k) - D(n,k-1) -/
-theorem d_eq_D_diff (n k : ℕ) (hk1 : 1 ≤ k) (hkn : k ≤ n) :
-    d n k = D n k - D n (k - 1) := by
-  -- By definition, D(n,k) counts graphs with omega <= k
-  -- D(n,k-1) counts graphs with omega <= k-1
-  -- Their difference counts graphs with omega = k
-  sorry  -- Requires set cardinality subtraction argument
-
-/-! ## Connection to CC-Transformation -/
-
-/-- The minimum coding clique size for a graph G equals
-    omega(G) + 1, by the Clique-Size Dominance Theorem -/
-theorem K_min_eq (n : ℕ) (G : SimpleGraph (Fin n)) :
-    (cliqueNumber n G + 1 : ℕ) =
-      sSup { K : ℕ |
-        ∀ (G' : SimpleGraph (Fin (n * K))),
-          True } := by  -- placeholder for CC-bijectivity condition
-  sorry
-
-end DominanceThreshold
-\end{lstlisting}
-
-\begin{remark}[Lean Formalization Status]
-The Lean 4 code above provides the complete type-theoretic framework for the Dominance Threshold Distribution. The definitions of \texttt{cliqueNumber}, \texttt{d}, and \texttt{D} are fully formalized. The boundary theorems \texttt{d\_first\_col} and \texttt{d\_diag} are stated with proof sketches; completing the proofs requires formalizing the relationship between the SimpleGraph lattice structure (bot/top) and clique numbers, which is straightforward but involves several auxiliary lemmas about Mathlib's \texttt{SimpleGraph} API. The \texttt{sorry} placeholders mark admitted proofs that can be completed by developing the necessary graph-theoretic infrastructure within Mathlib.
-\end{remark}
-
-\section{Applications}
-
-\begin{enumerate}
-\item \textbf{Graph Encoding Optimization}: The distribution $d(n, k)$ tells us what fraction of graphs on $n$ vertices require coding clique size $K = k + 1$. For random graphs $G(n, 1/2)$, the clique number is approximately $2 \log_2 n$, so most graphs require $K \approx 2 \log_2 n + 1$. This determines the average-case space complexity of the CC-transformation.
-
-\item \textbf{Ramsey Theory}: The values $d(n, k)$ for $k$ near $n$ relate directly to Ramsey numbers. Specifically, $d(n, n-1)$ counts graphs that are ``almost complete'' but missing at least one edge from being $K_n$. The asymptotic behavior of $d(n, k)$ for $k$ near $n$ connects to the probabilistic method in Ramsey theory. The row $D(n, k)$ for small $k$ connects to Tur\'an-type extremal problems: $D(n, k)$ counts $K_{k+1}$-free graphs, and the relationship $D(n, k) = c(n, k)$ provides a computational handle on the Kruskal-Katona and Moon-Moser bounds.
-
-\item \textbf{Homogeneous Structures}: In the theory of homogeneous graphs (Cherlin's classification program), the clique number is a key invariant determining the Fra\"iss\'e limit. The distribution $d(n, k)$ provides the ``raw material'' for constructing Fra\"iss\'e limits with prescribed clique numbers. In particular, the CC-transformation embeds all $p$-multigraphs with bounded clique number into simple graphs, and the dominance threshold distribution tells us precisely which coding clique sizes are needed.
-
-\item \textbf{Information Theory}: The fact that $d(n, k)$ is concentrated around $k \approx 2\log_2 n$ for large $n$ implies that the CC-transformation is efficient in practice: most real-world graphs have small clique numbers relative to their size, so the coding clique size $K = \omega(G) + 1$ is typically modest.
-\end{enumerate}
+For the chosen clique-dominance coding rule, $d(n,k)$ also gives the
+number of simple graphs assigned each coding size $k+1$. It can
+therefore describe that convention's allocation costs. It does not
+claim optimality over all graph encodings or decoding rules.
+Connections with extremal and Ramsey questions require their own
+additional arguments; a finite clique-number distribution alone
+does not determine a Fraisse limit or establish performance on an
+empirical network population.
 
 \section{Asymptotic Analysis}
-
-\begin{proposition}[Concentration of Clique Number]
-For a random labeled graph $G \sim G(n, 1/2)$, the clique number satisfies:
+\begin{proposition}[Clique number of a uniform random graph]
+For $G\sim G(n,1/2)$,
 \[
-\Pr[\omega(G) = k] = \frac{d(n, k)}{2^{\binom{n}{2}}},
+ \Pr(\omega(G)=k)=\frac{d(n,k)}{2^{\binom n2}}.
 \]
-and as $n \to \infty$, this probability concentrates on $k = \lfloor 2\log_2 n \rfloor$ or $k = \lceil 2\log_2 n \rceil$.
-\end{proposition}
-
-\begin{proposition}[Dominance Threshold for Random Graphs]
-The expected minimum coding clique size for a random graph satisfies:
+The first-order approximation is
 \[
-\mathbb{E}[K_{\min}] = \mathbb{E}[\omega(G)] + 1 \approx 2\log_2 n + 1.
+ \frac{\omega(G)}{2\log_2n}\ \xrightarrow{\Pr}\ 1.
 \]
-This implies that the CC-transformation produces images of size approximately $n \cdot (2\log_2 n + 1)$ vertices for typical graphs, which is only marginally larger than the original.
+More precisely,
+\[
+ \omega(G)=2\log_2n-2\log_2\log_2n+O(1)
+ \quad\text{with high probability}.
+\]
+There is an integer sequence $k_n=2\log_2n-2\log_2\log_2n+O(1)$
+such that $\Pr(\omega(G)\in\{k_n,k_n+1\})\to1$.
 \end{proposition}
+\begin{proof}
+Every labeled graph is equiprobable, proving the exact identity.
+The asymptotic statements are the classical clique-number results
+of Bollobas and Erdos, including the finer concentration statement
+\cite{bollobaserdos1976,bollobas2001}.
+\end{proof}
+\begin{proposition}[Expansion under the dominance rule]
+For the chosen simple-graph rule $\Kdom=\omega(G)+1$,
+\[
+ \mathbb E[\Kdom]=2\log_2n-2\log_2\log_2n+O(1).
+\]
+Its expected output vertex count is
+\[
+ n\,[2\log_2n-2\log_2\log_2n+O(1)].
+\]
+Thus the expected vertex count is $\Theta(n\log n)$, a logarithmic expansion
+factor relative to the input's $n$ vertices.
+\end{proposition}
+\begin{proof}
+Use the classical expectation estimate for the clique number
+\cite{bollobaserdos1976,bollobas2001} and the identities
+$\Kdom=\omega+1$ and $|V(f_{CC}(G))|=n\Kdom$ for this rule.
+\end{proof}
+This is a statement about the specified uniform model and coding
+convention. It does not by itself establish runtime efficiency,
+optimal encoding size, or typical behavior of real-world graphs.
+
+\begin{figure}[htbp]\centering
+\begin{tikzpicture}
+\begin{axis}[ybar,bar width=8pt,width=0.91\textwidth,height=6cm,
+ xlabel={Clique number $k$},ylabel={Probability},
+ ymin=0,ymax=0.7,xtick={1,2,3,4,5,6,7,8},
+ legend style={at={(0.97,0.97)},anchor=north east},
+ enlarge x limits=0.1,grid=major,grid style={gray!15}]
+\addplot[fill=blue!50,draw=blue!70!black] coordinates {
+ (1,0.000000476837)(2,0.06365776062)(3,0.6452064514)
+ (4,0.2747759819)(5,0.01615858078)(6,0.0002002716064)(7,0.000000476837)};
+\addplot[fill=orange!70,draw=orange!80!black] coordinates {
+ (1,0.000000003725)(2,0.017442811280)(3,0.530700638890)
+ (4,0.413286339492)(5,0.037817172706)(6,0.000749349594)
+ (7,0.000003680587)(8,0.000000003725)};
+\legend{$n=7$,$n=8$}
+\end{axis}
+\end{tikzpicture}
+\caption{Exact clique-number probabilities for labeled graphs on
+seven and eight vertices, obtained by normalizing the retained
+enumeration rows. Both rows have mode $k=3$. At $n=8$ the mean is
+$3.473740656$. These finite distributions illustrate the enumerative
+result; the finer asymptotic location is stated in Proposition~9.1.}
+\end{figure}
 
 \section{Conclusion}
+The triangles $d(n,k)$, $d_p(n,k)$ and $D(n,k)$ give exact finite
+counts by clique number, bounded multiplicity and cumulative clique
+bound. Their original tabulated values remain unchanged and are
+supported by additional independent termwise reproduction.
+The clique-dominance threshold $k+1$ remains a well-defined
+interpretation under the chosen coding convention. Separating that
+convention from necessary minimum encoding size, and separating
+first-order asymptotics from precise concentration, makes the scope
+of the result explicit without changing its enumerative content.
 
-The Clique-Size Dominance Threshold Distribution $d(n, k)$ fills a genuine gap in the OEIS: the labeled-by-clique-number triangle does not exist, despite the unlabeled version (A263341) and the labeled-by-chromatic-number analog (A058843) both being present. The triangle provides a fine-grained enumeration of graphs by their structural density, directly connects to the CC-transformation's validity condition, and offers a computational handle on the ``capacity'' of the Rado graph for encoding structures of varying density.
+\section{Corrigendum to the May 2026 Edition}\label{sec:corrigendum}
+This section records clarifications identified in an author-initiated
+review, supported by additional independent verification. The
+finite enumeration is the paper's main result. Its definitions,
+retained tables, near-diagonal closed forms and multigraph weighting
+formula are unchanged. None of the corrections below changes any
+independently reproduced term of A395684 or A395691--A395695.
+
+\subsection{Precision of the original Proposition 9.1}
+The expression $2\log_2n$ is a valid first-order approximation to
+the clique number of $G(n,1/2)$. In the original Proposition~9.1,
+that approximation was used more precisely than justified by saying
+the probability concentrates on its floor or ceiling. The actual
+concentration location includes the unbounded second-order term
+$-2\log_2\log_2n$, as now stated in Proposition~9.1.
+The exact identity $\Pr(\omega=k)=d(n,k)/2^{\binom n2}$ is unchanged.
+The approximation was not used to compute the finite tables.
+
+\subsection{Expansion caveat and finite-data caption}
+For the specified dominance rule, the first-order output estimate
+$n(2\log_2n+1)$ describes the leading scale. The more precise
+expectation is given in Proposition~9.2. The phrase ``only
+marginally larger'' is replaced by the explicit description
+``a logarithmic expansion factor.'' Statements about a uniform
+random-graph model do not establish performance on empirical
+network distributions. Figure~1 now describes the actual finite
+rows rather than using the first-order asymptotic expression as
+their concentration center.
+
+\subsection{Related sequence identifications}
+A058843 counts properly colored labeled graphs, identifying
+permutations of color names; it does not count graphs by their
+chromatic number. Its $n=4,k=2$ entry is $80$. The original
+chromatic-number comparison using $31$ is replaced by the correct
+description in Section~5. The corresponding unlabeled
+$n=4,k=2$ entry of A263341 is $6$, rather than the neighboring
+entry $3$. These were comparison descriptions, not inputs to the
+enumeration algorithms. The labeled value $d(4,2)=40$ is unchanged.
+
+\subsection{Dominance convention and lossless recovery}
+The value $k+1$ is the least integer satisfying the imposed
+condition $K>k$. It should not be read as a necessary minimum for
+every lossless decoder. Indeed, the cited same-index wiring admits
+the following elementary recovery method when $K>P$, with $P$
+the maximum multiplicity.
+
+Every vertex of a coding clique has its $K-1$ internal neighbors.
+The unused index $K$ has no external neighbors, so the minimum
+degree of the image is exactly $K-1$. Each vertex of this degree
+has closed neighborhood equal to its coding clique. Taking the
+distinct such neighborhoods recovers the entire cluster partition;
+counting the edges between each pair recovers its multiplicity.
+Thus $K=P+1$ suffices for this decoder without a bound on the
+input clique number. For simple graphs, $K=2$ suffices.
+
+The triangle therefore measures clique number and the assigned
+threshold under the dominance convention, not an optimal cost
+over all decoding methods. This corrects the necessity/minimum
+interpretation while preserving the enumeration and the
+sufficient largest-clique identification argument. It also avoids
+the earlier tension between a chosen coding rule and general
+recoverability.
+
+\subsection{Overlap expression and formal status}
+Remark~3.1 in the original edition contained an incorrect overlap
+expression. The correct two-set subtraction is $\binom t2$ when
+the vertex intersection has size $t$; Remark~\ref{rem:overlap} now
+gives the edge-union formulation. That expression was not used
+to generate the retained tables or prove the near-diagonal formulas.
+The updated formalization material states its exact proved scope,
+separately from cited asymptotics and finite computational checks.
+Historical sources and the original editions remain available
+in the repository archive.
+
+\subsection{Reproducibility and preservation of the result}
+The supplementary verification compares individual entries, not
+only row totals. It independently reproduces all six distributions
+through eight vertices, including weighted and cumulative values.
+The corrected comparisons, asymptotic precision, overlap remark
+and decoding interpretation do not enter those computations.
+The accepted finite enumerative contribution and its use as a
+labeled-graph clique-number census are therefore preserved.
 
 \begin{thebibliography}{9}
-\bibitem{zarzuelo2025} A. Zarzuelo Urdiales, ``Canonical Embedding of Universal $p$-Graphs, Commensurable Weighted Graphs, and Line Structures into the Rado Graph via Clique-Size Dominance Transformation,'' December 2025.
-\bibitem{oeis} N. J. A. Sloane et al., The On-Line Encyclopedia of Integer Sequences, \url{https://oeis.org}.
-\bibitem{bollobas2001} B. Bollob\'as, \textit{Random Graphs}, 2nd ed., Cambridge University Press, 2001.
-\bibitem{cherlin2011} G. Cherlin, ``Two problems on homogeneous structures, revisited,'' \textit{Contributions to Discrete Mathematics}, 2011.
-\bibitem{mathlib} The Mathlib Community, ``Mathlib -- a mathematical library for Lean 4,'' \url{https://github.com/leanprover-community/mathlib4}.
+\bibitem{zarzuelo2025} A. Zarzuelo Urdiales,
+\emph{Canonical Embedding of Universal $p$-Graphs, Commensurable
+Weighted Graphs, and Line Structures into the Rado Graph via
+Clique-Size Dominance Transformation}, December 2025.
+\bibitem{oeis} The OEIS Foundation,
+\emph{The On-Line Encyclopedia of Integer Sequences},
+\url{https://oeis.org}; A395684, A395691--A395695,
+A263341, A058843, A006125 and A213434.
+\bibitem{bollobaserdos1976} B. Bollobas and P. Erdos,
+``Cliques in random graphs,'' \emph{Mathematical Proceedings of
+the Cambridge Philosophical Society} \textbf{80} (1976), 419--427.
+\url{https://www.renyi.hu/~p_erdos/1976-05.pdf}.
+\bibitem{bollobas2001} B. Bollobas, \emph{Random Graphs},
+2nd ed., Cambridge University Press, 2001.
+\bibitem{repository} A. Zarzuelo Urdiales,
+\emph{Clique-OEIS: source, formalization and reproducibility material},
+\url{https://github.com/alejandrozu/Clique-OEIS}.
+\bibitem{original} A. Zarzuelo Urdiales,
+\emph{Clique-Size Dominance Threshold Distribution}, May 2026,
+original edition, \url{https://doi.org/10.5281/zenodo.20004703}.
 \end{thebibliography}
-
 \end{document}
